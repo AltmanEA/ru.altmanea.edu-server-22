@@ -8,10 +8,10 @@ plugins {
     kotlin("plugin.serialization") version "1.6.10"
 }
 
-group = "ru.altmanea"
+group = "ru.altmanea.edu-server-22"
 version = "0.1"
 application {
-    mainClass.set("ru.altmanea.ApplicationKt")
+    mainClass.set("ru.altmanea.edu.server.ApplicationKt")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
 }
 
@@ -23,6 +23,7 @@ repositories {
 }
 
 dependencies {
+    implementation("ru.altmanea.edu-server-22:model-jvm-0.1")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-serialization:$ktor_version")
     implementation("io.ktor:ktor-server-sessions:$ktor_version")

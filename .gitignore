@@ -11,4 +11,10 @@ gradlew.bat
 /model/gradle/
 /model/gradlew
 /model/gradlew.bat
-
+/client/.gradle/
+/client/.idea/
+/client/build/
+/client/gradle/
+/client/kotlin-js-store
+/client/gradlew
+/client/gradlew.bat
