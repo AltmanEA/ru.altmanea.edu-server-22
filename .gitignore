@@ -1,0 +1,14 @@
+# Project exclude paths
+/.gradle/
+/.idea/
+/build/
+/gradle/
+gradlew
+gradlew.bat
+/model/.gradle/
+/model/.idea/
+/model/build/
+/model/gradle/
+/model/gradlew
+/model/gradlew.bat
+
