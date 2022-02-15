@@ -7,6 +7,9 @@ import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import ru.altmanea.edu.server.model.Config
+import ru.altmanea.edu.server.repo.studentsRepo
+import ru.altmanea.edu.server.repo.studentsRepoTestData
+import ru.altmanea.edu.server.rest.student
 
 fun main() {
     embeddedServer(
@@ -20,10 +23,14 @@ fun main() {
 }
 
 fun Application.main(test: Boolean = true) {
+    if(test) {
+        studentsRepoTestData.forEach { studentsRepo.create(it) }
+    }
     install(ContentNegotiation) {
         json()
     }
     routing {
+        student()
         index()
     }
 }

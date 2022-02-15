@@ -1,13 +1,42 @@
+import component.fcContainerStudent
+import component.fcContainerStudentList
 import kotlinx.browser.document
-import react.dom.h1
+import react.createElement
 import react.dom.render
-import ru.altmanea.edu.server.model.Student
+import react.query.QueryClient
+import react.query.QueryClientProvider
+import react.router.Route
+import react.router.Routes
+import react.router.dom.HashRouter
+import react.router.dom.Link
+import wrappers.cReactQueryDevtools
 
-val sheldon = Student("Sheldon", "Cooper")
+val queryClient = QueryClient()
 
 fun main() {
-    render(document.getElementById("root")!!){
-        h1 { +"Hello, ${sheldon.fullname}" }
+    render(document.getElementById("root")!!) {
+        HashRouter {
+            QueryClientProvider {
+                attrs.client = queryClient
+                Link {
+                    attrs.to = "/"
+                    +"Students"
+                }
+                Routes {
+                    Route {
+                        attrs.index = true
+                        attrs.element =
+                            createElement(fcContainerStudentList())
+                    }
+                    Route {
+                        attrs.path = "/student/:id"
+                        attrs.element =
+                            createElement(fcContainerStudent())
+                    }
+                }
+                child(cReactQueryDevtools()) {}
+            }
+        }
     }
 }
 
