@@ -52,3 +52,5 @@ tasks.register<Copy>("copyBuildToBuild") {
 }
 tasks.named("build") { finalizedBy("copyBuild") }
 tasks.named("build") { finalizedBy("copyBuildToBuild") }
+tasks.named("browserDevelopmentWebpack") { finalizedBy("copyBuild") }
+tasks.named("browserDevelopmentWebpack") { finalizedBy("copyBuildToBuild") }

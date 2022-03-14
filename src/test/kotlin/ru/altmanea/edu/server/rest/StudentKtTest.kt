@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import org.junit.Test
 import ru.altmanea.edu.server.main
 import ru.altmanea.edu.server.model.Config
+import ru.altmanea.edu.server.model.Lesson
 import ru.altmanea.edu.server.model.Student
 import ru.altmanea.edu.server.repo.RepoItem
 import kotlin.test.assertEquals
@@ -53,7 +54,7 @@ internal class StudentsKtTest {
             handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid).apply {
                 assertEquals(HttpStatusCode.Accepted, response.status())
             }
-            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid) .apply {
+            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid).apply {
                 assertEquals(HttpStatusCode.NotFound, response.status())
             }
 
@@ -68,6 +69,63 @@ internal class StudentsKtTest {
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
             }
+
+            // byFirstName
+            val howard = handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        Student("Howard", "")
+                    )
+                )
+            }.run {
+                assertEquals(HttpStatusCode.OK, response.status())
+                decodeBody<List<RepoItem<Student>>>()
+            }
+            assertEquals(1, howard.size)
+            handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        Lesson("Howard")
+                    )
+                )
+            }.run {
+                assertEquals(HttpStatusCode.BadRequest, response.status())
+            }
+            handleRequest(HttpMethod.Post, Config.studentsPath) {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        Student("Howard", "Duck")
+                    )
+                )
+            }.apply {
+                assertEquals(HttpStatusCode.Created, response.status())
+            }
+            val howards = handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        Student("Howard", "")
+                    )
+                )
+            }.run {
+                assertEquals(HttpStatusCode.OK, response.status())
+                decodeBody<List<RepoItem<Student>>>()
+            }
+            assertEquals(2, howards.size)
+
+            // byUUIDs
+            val students = handleRequest(HttpMethod.Get, Config.studentsPath + "/byUUIDs") {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        studentItems
+                            .slice(0..2)
+                            .map { it.uuid }
+                    )
+                )
+            }.run {
+                assertEquals(HttpStatusCode.OK, response.status())
+                decodeBody<List<RepoItem<Student>>>()
+            }
+            assertEquals(3, students.size)
         }
     }
 }

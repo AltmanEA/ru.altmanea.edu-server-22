@@ -10,5 +10,7 @@ class Config {
 
         const val studentsPath = "${pathPrefix}students/"
         const val studentsURL = "$serverUrl$studentsPath"
+        const val lessonsPath = "${pathPrefix}lessons/"
+        const val lessonsURL = "$serverUrl$lessonsPath"
     }
 }

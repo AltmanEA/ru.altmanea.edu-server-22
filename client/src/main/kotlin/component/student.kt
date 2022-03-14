@@ -4,6 +4,8 @@ import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.w3c.dom.events.Event
 import react.*
 import react.dom.*
@@ -95,7 +97,7 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
                 headers = json(
                     "Content-Type" to "application/json",
                 )
-                data = JSON.stringify(mutationData.newStudent)
+                data = Json.encodeToString(mutationData.newStudent)
             })
         },
         options = jso {

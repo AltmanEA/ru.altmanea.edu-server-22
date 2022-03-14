@@ -1,0 +1,128 @@
+package component
+
+import kotlinext.js.jso
+import kotlinx.html.INPUT
+import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import react.Props
+import react.dom.*
+import react.fc
+import react.query.useMutation
+import react.query.useQuery
+import react.query.useQueryClient
+import react.router.dom.Link
+import react.useRef
+import ru.altmanea.edu.server.model.Config.Companion.lessonsURL
+import ru.altmanea.edu.server.model.Item
+import ru.altmanea.edu.server.model.Lesson
+import wrappers.AxiosResponse
+import wrappers.QueryError
+import wrappers.axios
+import kotlin.js.json
+
+external interface LessonListProps : Props {
+    var lessons: List<Item<Lesson>>
+    var addLesson: (String) -> Unit
+    var deleteLesson: (Int) -> Unit
+}
+
+fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
+
+    val nameRef = useRef<INPUT>()
+
+    span {
+        p {
+            +"Name: "
+            input {
+                ref = nameRef
+            }
+        }
+        button {
+            +"Add Lesson"
+            attrs.onClickFunction = {
+                nameRef.current?.value?.let {
+                    props.addLesson(it)
+                }
+            }
+        }
+    }
+
+    h3 { +"Lessons" }
+    ol {
+        props.lessons.mapIndexed { index, lessonItem ->
+            li {
+                Link {
+                    attrs.to = "/lessons/${lessonItem.uuid}"
+                    +"${lessonItem.elem.name} \t"
+                }
+                button {
+                    +"X"
+                    attrs.onClickFunction = {
+                        props.deleteLesson(index)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
+    val queryClient = useQueryClient()
+
+    val query = useQuery<Any, QueryError, AxiosResponse<Array<Item<Lesson>>>, Any>(
+        "lessonList",
+        {
+            axios<Array<Lesson>>(jso {
+                url = lessonsURL
+            })
+        }
+    )
+
+    val addLessonMutation = useMutation<Any, Any, Any, Any>(
+        { lesson: Lesson ->
+            axios<String>(jso {
+                url = lessonsURL
+                method = "Post"
+                headers = json(
+                    "Content-Type" to "application/json",
+                )
+                data = Json.encodeToString(lesson)
+            })
+        },
+        options = jso {
+            onSuccess = { _: Any, _: Any, _: Any? ->
+                queryClient.invalidateQueries<Any>("lessonList")
+            }
+        }
+    )
+
+    val deleteLessonMutation = useMutation<Any, Any, Any, Any>(
+        { lessonItem: Item<Lesson> ->
+            axios<String>(jso {
+                url = "$lessonsURL/${lessonItem.uuid}"
+                method = "Delete"
+            })
+        },
+        options = jso {
+            onSuccess = { _: Any, _: Any, _: Any? ->
+                queryClient.invalidateQueries<Any>("lessonList")
+            }
+        }
+    )
+
+    if (query.isLoading) div { +"Loading .." }
+    else if (query.isError) div { +"Error!" }
+    else {
+        val items = query.data?.data?.toList() ?: emptyList()
+        child(fcLessonList()) {
+            attrs.lessons = items
+            attrs.addLesson = {
+                addLessonMutation.mutate(Lesson(it), null)
+            }
+            attrs.deleteLesson = {
+                deleteLessonMutation.mutate(items[it], null)
+            }
+        }
+    }
+}

@@ -28,7 +28,6 @@ fun Route.student() =
                     "No student with id $id",
                     status = HttpStatusCode.NotFound
                 )
-            call.response.etag(studentItem.etag.toString())
             call.respond(studentItem)
         }
         post {
@@ -56,5 +55,26 @@ fun Route.student() =
             val newStudent = call.receive<Student>()
             studentsRepo.update(id, newStudent)
             call.respondText("Student updates correctly", status = HttpStatusCode.Created)
+        }
+
+        get("byFirstname") {
+            val firstname = try {
+                call.receive<Student>().firstname
+            } catch (e: Throwable) {
+                return@get call.respondText(
+                    "Request body is not student", status = HttpStatusCode.BadRequest
+                )
+            }
+            call.respond(studentsRepo.find { it.firstname == firstname })
+        }
+        get("byUUIDs") {
+            val uuids = try {
+                call.receive<List<String>>()
+            } catch (e: Throwable) {
+                return@get call.respondText(
+                    "Request body is not list uuid", status = HttpStatusCode.BadRequest
+                )
+            }
+            call.respond(uuids.map { studentsRepo[it] })
         }
     }

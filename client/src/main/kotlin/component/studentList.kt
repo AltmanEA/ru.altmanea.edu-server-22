@@ -3,6 +3,8 @@ package component
 import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import react.Props
 import react.dom.*
 import react.fc
@@ -61,7 +63,7 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
             li {
                 val student = Student(studentItem.elem.firstname, studentItem.elem.surname)
                 Link {
-                    attrs.to = "/student/${studentItem.uuid}"
+                    attrs.to = "/students/${studentItem.uuid}"
                     +"${student.fullname} \t"
                 }
                 button {
@@ -95,7 +97,7 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
                 headers = json(
                     "Content-Type" to "application/json"
                 )
-                data = JSON.stringify(student)
+                data = Json.encodeToString(student)
             })
         },
         options = jso {
