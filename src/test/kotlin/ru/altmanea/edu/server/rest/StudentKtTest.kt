@@ -71,7 +71,7 @@ internal class StudentsKtTest {
             }
 
             // byFirstName
-            val howard = handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+            val howard = handleRequest(HttpMethod.Post, Config.studentsPath + "/byFirstname") {
                 setBodyAndHeaders(
                     Json.encodeToString(
                         Student("Howard", "")
@@ -82,7 +82,7 @@ internal class StudentsKtTest {
                 decodeBody<List<RepoItem<Student>>>()
             }
             assertEquals(1, howard.size)
-            handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+            handleRequest(HttpMethod.Post, Config.studentsPath + "/byFirstname") {
                 setBodyAndHeaders(
                     Json.encodeToString(
                         Lesson("Howard")
@@ -100,7 +100,7 @@ internal class StudentsKtTest {
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
             }
-            val howards = handleRequest(HttpMethod.Get, Config.studentsPath + "/byFirstname") {
+            val howards = handleRequest(HttpMethod.Post, Config.studentsPath + "/byFirstname") {
                 setBodyAndHeaders(
                     Json.encodeToString(
                         Student("Howard", "")
@@ -113,7 +113,7 @@ internal class StudentsKtTest {
             assertEquals(2, howards.size)
 
             // byUUIDs
-            val students = handleRequest(HttpMethod.Get, Config.studentsPath + "/byUUIDs") {
+            val students = handleRequest(HttpMethod.Post, Config.studentsPath + "/byUUIDs") {
                 setBodyAndHeaders(
                     Json.encodeToString(
                         studentItems

@@ -3,6 +3,8 @@ package component
 import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import react.Props
@@ -16,9 +18,10 @@ import react.useRef
 import ru.altmanea.edu.server.model.Config.Companion.studentsURL
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Student
-import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
+import wrappers.fetch
+import wrappers.fetchText
 import kotlin.js.json
 
 external interface StudentListProps : Props {
@@ -61,10 +64,9 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
     ol {
         props.students.mapIndexed { index, studentItem ->
             li {
-                val student = Student(studentItem.elem.firstname, studentItem.elem.surname)
                 Link {
                     attrs.to = "/students/${studentItem.uuid}"
-                    +"${student.fullname} \t"
+                    +"${studentItem.elem.fullname} \t"
                 }
                 button {
                     +"X"
@@ -77,16 +79,19 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
     }
 }
 
+@Serializable
+class ClientItemStudent(
+    override val elem: Student,
+    override val uuid: String,
+    override val etag: Long
+) : Item<Student>
+
 fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
     val queryClient = useQueryClient()
 
-    val query = useQuery<Any, QueryError, AxiosResponse<Array<Item<Student>>>, Any>(
+    val query = useQuery<String, QueryError, String, String>(
         "studentList",
-        {
-            axios<Array<Student>>(jso {
-                url = studentsURL
-            })
-        }
+        { fetchText(studentsURL) }
     )
 
     val addStudentMutation = useMutation<Any, Any, Any, Any>(
@@ -124,7 +129,8 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
     if (query.isLoading) div { +"Loading .." }
     else if (query.isError) div { +"Error!" }
     else {
-        val items = query.data?.data?.toList() ?: emptyList()
+        val items: List<ClientItemStudent> =
+            Json.decodeFromString(query.data ?: "")
         child(fcStudentList()) {
             attrs.students = items
             attrs.addStudent = { f, s ->

@@ -29,6 +29,7 @@ dependencies {
     implementation(kotlinw("react-query"))
     implementation(kotlinw("styled-next"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
+    implementation(npm("cross-fetch", "3.1.5"))
     implementation(npm("axios", "0.24.0"))
 }
 kotlin {

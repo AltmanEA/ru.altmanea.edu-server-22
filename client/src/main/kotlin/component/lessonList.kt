@@ -3,6 +3,8 @@ package component
 import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import react.Props
@@ -13,12 +15,15 @@ import react.query.useQuery
 import react.query.useQueryClient
 import react.router.dom.Link
 import react.useRef
+import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Config.Companion.lessonsURL
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Lesson
+import ru.altmanea.edu.server.model.Student
 import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
+import wrappers.fetchText
 import kotlin.js.json
 
 external interface LessonListProps : Props {
@@ -67,16 +72,19 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
     }
 }
 
+@Serializable
+class ClientItemLesson(
+    override val elem: Lesson,
+    override val uuid: String,
+    override val etag: Long
+) : Item<Lesson>
+
 fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
     val queryClient = useQueryClient()
 
-    val query = useQuery<Any, QueryError, AxiosResponse<Array<Item<Lesson>>>, Any>(
+    val query = useQuery<String, QueryError, String, String>(
         "lessonList",
-        {
-            axios<Array<Lesson>>(jso {
-                url = lessonsURL
-            })
-        }
+        { fetchText(lessonsURL) }
     )
 
     val addLessonMutation = useMutation<Any, Any, Any, Any>(
@@ -114,7 +122,8 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
     if (query.isLoading) div { +"Loading .." }
     else if (query.isError) div { +"Error!" }
     else {
-        val items = query.data?.data?.toList() ?: emptyList()
+        val items: List<ClientItemLesson> =
+            Json.decodeFromString(query.data ?: "")
         child(fcLessonList()) {
             attrs.lessons = items
             attrs.addLesson = {

@@ -4,6 +4,7 @@ import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.w3c.dom.events.Event
@@ -19,6 +20,7 @@ import ru.altmanea.edu.server.model.Student
 import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
+import wrappers.fetchText
 import kotlin.js.json
 
 external interface StudentProps : Props {
@@ -80,13 +82,9 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
 
     val studentId = studentParams["id"] ?: "Route param error"
 
-    val query = useQuery<Any, QueryError, AxiosResponse<Item<Student>>, Any>(
+    val query = useQuery<String, QueryError, String, String>(
         studentId,
-        {
-            axios<Array<Student>>(jso {
-                url = Config.studentsPath + studentId
-            })
-        }
+        { fetchText(Config.studentsPath + studentId) }
     )
 
     val updateStudentMutation = useMutation<Any, Any, MutationData, Any>(
@@ -110,7 +108,8 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
     if (query.isLoading) div { +"Loading .." }
     else if (query.isError) div { +"Error!" }
     else {
-        val studentItem = query.data?.data!!
+        val studentItem: ClientItemStudent =
+            Json.decodeFromString(query.data ?: "")
         child(fcStudent()) {
             attrs.students = studentItem
             attrs.updateStudent = { f, s ->
