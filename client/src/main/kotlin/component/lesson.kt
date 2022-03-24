@@ -15,6 +15,7 @@ import react.query.useQuery
 import react.query.useQueryClient
 import react.router.useParams
 import react.useRef
+import react.useState
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Lesson
@@ -89,7 +90,10 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
 
     val queryLesson = useQuery<String, QueryError, String, String>(
         lessonId,
-        { fetchText(Config.lessonsPath + lessonId) }
+        { fetchText(Config.lessonsPath + lessonId) },
+        options = jso {
+            refetchOnWindowFocus = false
+        }
     )
 
     val queryStudents = useQuery<String, QueryError, String, String>(
@@ -97,13 +101,14 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
         { fetchText(Config.studentsURL) }
     )
 
-    val updateLessonNameMutation = useMutation<Any, Any, String, Any>(
-        { name ->
+    val updateLessonNameMutation = useMutation<Any, Any, Pair<String, Long>, Any>(
+        { (name, etag) ->
             axios<String>(jso {
                 url = "${Config.lessonsURL}/$lessonId/name"
                 method = "Put"
                 headers = json(
                     "Content-Type" to "application/json",
+                    "etag" to etag
                 )
                 data = Json.encodeToString(Lesson(name))
             })
@@ -111,7 +116,6 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
         options = jso {
             onSuccess = { _: Any, _: Any, _: Any? ->
                 queryClient.invalidateQueries<Any>(lessonId)
-                queryClient.invalidateQueries<Any>("lessonList")
             }
         }
     )
@@ -129,7 +133,6 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
         options = jso {
             onSuccess = { _: Any, _: Any, _: Any? ->
                 queryClient.invalidateQueries<Any>(lessonId)
-                queryClient.invalidateQueries<Any>("lessonStudents")
             }
         }
     )
@@ -150,7 +153,7 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
             attrs.allStudents = studentItems
             attrs.studentUUIDs = studentsUUIDs
             attrs.updateLessonName = {
-                updateLessonNameMutation.mutate(it, null)
+                updateLessonNameMutation.mutate(it to lessonItem.etag, null)
             }
             attrs.addStudent = {
                 addStudentMutation.mutate(it, null)

@@ -56,10 +56,20 @@ fun Route.lesson() {
                 "No lesson with id $id",
                 status = HttpStatusCode.NotFound
             )
-            val newName = call.receive<Lesson>().name
-            val newLesson = lessonItem.elem.copy(name = newName)
-            lessonsRepo.update(lessonItem.uuid, newLesson)
-            call.respondText("Lesson name updates correctly", status = HttpStatusCode.Created)
+            val clientEtag = call.request.headers["etag"]?.toLong()
+            call.application.log.info("Update ${lessonItem.uuid} lesson name. Server etag is ${lessonItem.etag}, client etag is $clientEtag")
+            if(lessonItem.etag != clientEtag){
+                call.respondText(
+                    "Element had updated on server",
+                    status = HttpStatusCode.BadRequest
+                )
+            }
+            else {
+                val newName = call.receive<Lesson>().name
+                val newLesson = lessonItem.elem.copy(name = newName)
+                lessonsRepo.update(lessonItem.uuid, newLesson)
+                call.respondText("Lesson name updates correctly", status = HttpStatusCode.Created)
+            }
         }
     }
 
