@@ -17,8 +17,20 @@ internal class StudentsKtTest {
     @Test
     fun testStudentRoute() {
         withTestApplication(Application::main) {
+            val tokenAdmin = handleRequest(HttpMethod.Post, "/jwt-login") {
+                setBodyAndHeaders("""{ "username": "admin", "password": "admin" }""")
+            }.run {
+                "Bearer ${decodeBody<Token>().token}"
+            }
+            val tokenTutor = handleRequest(HttpMethod.Post, "/jwt-login") {
+                setBodyAndHeaders("""{ "username": "tutor", "password": "tutor" }""")
+            }.run {
+                "Bearer ${decodeBody<Token>().token}"
+            }
 
-            val studentItems = handleRequest(HttpMethod.Get, Config.studentsPath).run {
+            val studentItems = handleRequest(HttpMethod.Get, Config.studentsPath) {
+                addHeader("Authorization", tokenTutor)
+            }.run {
                 assertEquals(HttpStatusCode.OK, response.status())
                 decodeBody<List<RepoItem<Student>>>()
             }
@@ -26,11 +38,15 @@ internal class StudentsKtTest {
             val sheldon = studentItems.find { it.elem.firstname == "Sheldon" }
             check(sheldon != null)
 
-            handleRequest(HttpMethod.Get, Config.studentsPath + sheldon.uuid).run {
+            handleRequest(HttpMethod.Get, Config.studentsPath + sheldon.uuid){
+                addHeader("Authorization", tokenTutor)
+            }.run {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("Sheldon", decodeBody<RepoItem<Student>>().elem.firstname)
             }
-            handleRequest(HttpMethod.Get, Config.studentsPath + "Jack").run {
+            handleRequest(HttpMethod.Get, Config.studentsPath + "Jack"){
+                addHeader("Authorization", tokenTutor)
+            }.run {
                 assertEquals(HttpStatusCode.NotFound, response.status())
             }
 
@@ -40,10 +56,23 @@ internal class StudentsKtTest {
                         Student("Raj", "Koothrappali")
                     )
                 )
+                addHeader("Authorization", tokenTutor)
+            }.apply {
+                assertEquals(HttpStatusCode.Forbidden, response.status())
+            }
+            handleRequest(HttpMethod.Post, Config.studentsPath) {
+                setBodyAndHeaders(
+                    Json.encodeToString(
+                        Student("Raj", "Koothrappali")
+                    )
+                )
+                addHeader("Authorization", tokenAdmin)
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
             }
-            val studentItemsWithRaj = handleRequest(HttpMethod.Get, Config.studentsPath).run {
+            val studentItemsWithRaj = handleRequest(HttpMethod.Get, Config.studentsPath){
+                addHeader("Authorization", tokenTutor)
+            }.run {
                 decodeBody<List<RepoItem<Student>>>()
             }
             assertEquals(5, studentItemsWithRaj.size)
@@ -51,10 +80,14 @@ internal class StudentsKtTest {
             check(raj != null)
             assertEquals("Koothrappali", raj.elem.surname)
 
-            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid).apply {
+            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid){
+                addHeader("Authorization", tokenAdmin)
+            }.apply {
                 assertEquals(HttpStatusCode.Accepted, response.status())
             }
-            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid).apply {
+            handleRequest(HttpMethod.Delete, Config.studentsPath + raj.uuid){
+                addHeader("Authorization", tokenAdmin)
+            }.apply {
                 assertEquals(HttpStatusCode.NotFound, response.status())
             }
 
@@ -66,6 +99,7 @@ internal class StudentsKtTest {
                         Student("Penny", "Waitress")
                     )
                 )
+                addHeader("Authorization", tokenAdmin)
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
             }
@@ -77,6 +111,7 @@ internal class StudentsKtTest {
                         Student("Howard", "")
                     )
                 )
+                addHeader("Authorization", tokenAdmin)
             }.run {
                 assertEquals(HttpStatusCode.OK, response.status())
                 decodeBody<List<RepoItem<Student>>>()
@@ -88,6 +123,7 @@ internal class StudentsKtTest {
                         Lesson("Howard")
                     )
                 )
+                addHeader("Authorization", tokenAdmin)
             }.run {
                 assertEquals(HttpStatusCode.BadRequest, response.status())
             }
@@ -97,6 +133,7 @@ internal class StudentsKtTest {
                         Student("Howard", "Duck")
                     )
                 )
+                addHeader("Authorization", tokenAdmin)
             }.apply {
                 assertEquals(HttpStatusCode.Created, response.status())
             }
@@ -106,6 +143,7 @@ internal class StudentsKtTest {
                         Student("Howard", "")
                     )
                 )
+                addHeader("Authorization", tokenAdmin)
             }.run {
                 assertEquals(HttpStatusCode.OK, response.status())
                 decodeBody<List<RepoItem<Student>>>()
@@ -121,6 +159,7 @@ internal class StudentsKtTest {
                             .map { it.uuid }
                     )
                 )
+                addHeader("Authorization", tokenTutor)
             }.run {
                 assertEquals(HttpStatusCode.OK, response.status())
                 decodeBody<List<RepoItem<Student>>>()

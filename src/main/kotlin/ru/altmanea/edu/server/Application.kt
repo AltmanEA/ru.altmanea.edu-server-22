@@ -6,6 +6,7 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import ru.altmanea.edu.server.auth.auth
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.repo.lessonsRepo
 import ru.altmanea.edu.server.repo.lessonsRepoTestData
@@ -33,6 +34,7 @@ fun Application.main(test: Boolean = true) {
     install(ContentNegotiation) {
         json()
     }
+    auth()
     routing {
         student()
         lesson()
