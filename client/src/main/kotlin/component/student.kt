@@ -17,6 +17,7 @@ import react.router.useParams
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Student
+import userInfo
 import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
@@ -79,12 +80,21 @@ class MutationData(
 fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
     val studentParams = useParams()
     val queryClient = useQueryClient()
+    val token = useContext(userInfo)?.second
+    val authHeader = "Authorization" to token
 
     val studentId = studentParams["id"] ?: "Route param error"
 
     val query = useQuery<String, QueryError, String, String>(
         studentId,
-        { fetchText(Config.studentsPath + studentId) }
+        {
+            fetchText(
+                Config.studentsPath + studentId,
+                jso {
+                    headers = json(authHeader)
+                }
+            )
+        }
     )
 
     val updateStudentMutation = useMutation<Any, Any, MutationData, Any>(
@@ -94,6 +104,7 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
                 method = "Put"
                 headers = json(
                     "Content-Type" to "application/json",
+                    authHeader
                 )
                 data = Json.encodeToString(mutationData.newStudent)
             })

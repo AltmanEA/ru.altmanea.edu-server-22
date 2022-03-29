@@ -11,9 +11,11 @@ import react.dom.li
 import react.dom.ol
 import react.fc
 import react.query.useQuery
+import react.useContext
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Student
+import userInfo
 import wrappers.QueryError
 import wrappers.fetchText
 import kotlin.js.json
@@ -38,6 +40,8 @@ external interface ContainerLessonStudentsProps : Props {
 }
 
 fun fcContainerLessonStudents() = fc("ContainerLessonStudents") { props: ContainerLessonStudentsProps ->
+    val token = useContext(userInfo)?.second
+    val authHeader = "Authorization" to token
 
     val query = useQuery<String, QueryError, String, String>(
         "lessonStudents",
@@ -47,7 +51,10 @@ fun fcContainerLessonStudents() = fc("ContainerLessonStudents") { props: Contain
                 jso {
                     method = "POST"
                     body = Json.encodeToString(props.studentUUIDS)
-                    headers = json("Content-Type" to "application/json")
+                    headers = json(
+                        "Content-Type" to "application/json",
+                        authHeader
+                    )
                 }
             )
         }

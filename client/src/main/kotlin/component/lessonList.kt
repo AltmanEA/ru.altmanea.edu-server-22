@@ -14,12 +14,14 @@ import react.query.useMutation
 import react.query.useQuery
 import react.query.useQueryClient
 import react.router.dom.Link
+import react.useContext
 import react.useRef
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Config.Companion.lessonsURL
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Lesson
 import ru.altmanea.edu.server.model.Student
+import userInfo
 import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
@@ -81,10 +83,19 @@ class ClientItemLesson(
 
 fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
     val queryClient = useQueryClient()
+    val token = useContext(userInfo)?.second
+    val authHeader = "Authorization" to token
 
     val query = useQuery<String, QueryError, String, String>(
         "lessonList",
-        { fetchText(lessonsURL) }
+        {
+            fetchText(
+                lessonsURL,
+                jso {
+                    headers = json(authHeader)
+                }
+            )
+        }
     )
 
     val addLessonMutation = useMutation<Any, Any, Any, Any>(
@@ -94,6 +105,7 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
                 method = "Post"
                 headers = json(
                     "Content-Type" to "application/json",
+                    authHeader
                 )
                 data = Json.encodeToString(lesson)
             })
@@ -110,6 +122,7 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
             axios<String>(jso {
                 url = "$lessonsURL/${lessonItem.uuid}"
                 method = "Delete"
+                headers = json(authHeader)
             })
         },
         options = jso {

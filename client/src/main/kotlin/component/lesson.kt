@@ -7,19 +7,17 @@ import kotlinx.html.js.onClickFunction
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import react.Props
+import react.*
 import react.dom.*
-import react.fc
 import react.query.useMutation
 import react.query.useQuery
 import react.query.useQueryClient
 import react.router.useParams
-import react.useRef
-import react.useState
 import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Item
 import ru.altmanea.edu.server.model.Lesson
 import ru.altmanea.edu.server.model.Student
+import userInfo
 import wrappers.QueryError
 import wrappers.axios
 import wrappers.fetchText
@@ -85,12 +83,19 @@ fun fcLesson() = fc("Lesson") { props: LessonProps ->
 fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
     val lessonParams = useParams()
     val queryClient = useQueryClient()
+    val token = useContext(userInfo)?.second
+    val authHeader = "Authorization" to token
 
     val lessonId = lessonParams["id"] ?: "Route param error"
 
     val queryLesson = useQuery<String, QueryError, String, String>(
         lessonId,
-        { fetchText(Config.lessonsPath + lessonId) },
+        {
+            fetchText(
+                Config.lessonsPath + lessonId,
+                jso { headers = json(authHeader) }
+            )
+        },
         options = jso {
             refetchOnWindowFocus = false
         }
@@ -98,7 +103,12 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
 
     val queryStudents = useQuery<String, QueryError, String, String>(
         "studentList",
-        { fetchText(Config.studentsURL) }
+        {
+            fetchText(
+                Config.studentsURL,
+                jso { headers = json(authHeader) }
+            )
+        }
     )
 
     val updateLessonNameMutation = useMutation<Any, Any, Pair<String, Long>, Any>(
@@ -108,7 +118,8 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
                 method = "Put"
                 headers = json(
                     "Content-Type" to "application/json",
-                    "etag" to etag
+                    "etag" to etag,
+                    authHeader
                 )
                 data = Json.encodeToString(Lesson(name))
             })
@@ -127,6 +138,7 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
                 method = "Post"
                 headers = json(
                     "Content-Type" to "application/json",
+                    authHeader
                 )
             })
         },
