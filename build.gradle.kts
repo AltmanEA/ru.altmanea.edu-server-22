@@ -1,6 +1,8 @@
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
+val exposedVersion: String by project
+val h2Version = "2.1.210"
 
 plugins {
     application
@@ -33,6 +35,10 @@ dependencies {
     implementation("io.ktor:ktor-html-builder:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("com.h2database:h2:$h2Version")
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

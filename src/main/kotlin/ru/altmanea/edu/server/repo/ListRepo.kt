@@ -1,5 +1,6 @@
 package ru.altmanea.edu.server.repo
 
+import ru.altmanea.edu.server.model.Item
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.ConcurrentHashMap
 
@@ -11,10 +12,10 @@ class ListRepo<E> : Repo<E> {
             RepoItem(it.first, uuid, it.second)
         }
 
-    override fun find(predicate: (E) -> Boolean): List<RepoItem<E>> =
-        list
-            .filter { (_, value) -> predicate(value.first) }
-            .map { RepoItem(it.value.first, it.key, it.value.second) }
+//    override fun find(predicate: (E) -> Boolean): List<RepoItem<E>> =
+//        list
+//            .filter { (_, value) -> predicate(value.first) }
+//            .map { RepoItem(it.value.first, it.key, it.value.second) }
 
     override fun findAll(): List<RepoItem<E>> =
         list

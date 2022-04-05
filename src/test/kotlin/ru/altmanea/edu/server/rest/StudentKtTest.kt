@@ -11,6 +11,7 @@ import ru.altmanea.edu.server.model.Config
 import ru.altmanea.edu.server.model.Lesson
 import ru.altmanea.edu.server.model.Student
 import ru.altmanea.edu.server.repo.RepoItem
+import java.util.UUID
 import kotlin.test.assertEquals
 
 internal class StudentsKtTest {
@@ -44,7 +45,7 @@ internal class StudentsKtTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("Sheldon", decodeBody<RepoItem<Student>>().elem.firstname)
             }
-            handleRequest(HttpMethod.Get, Config.studentsPath + "Jack"){
+            handleRequest(HttpMethod.Get, Config.studentsPath + UUID.randomUUID().toString()){
                 addHeader("Authorization", tokenTutor)
             }.run {
                 assertEquals(HttpStatusCode.NotFound, response.status())

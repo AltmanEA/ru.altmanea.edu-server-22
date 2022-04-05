@@ -5,7 +5,9 @@ import ru.altmanea.edu.server.model.Item
 interface Repo<E> {
 
     operator fun get(uuid: String): Item<E>?
-    fun find(predicate: (E) -> Boolean): List<Item<E>>
+
+//    fun find(predicate: (E) -> Boolean): List<Item<E>>
+
     fun findAll(): List<Item<E>>
 
     fun create(element: E): Boolean

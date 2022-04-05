@@ -44,7 +44,7 @@ fun Route.student() =
                             "Request body is not student", status = HttpStatusCode.BadRequest
                         )
                     }
-                    call.respond(studentsRepo.find { it.firstname == firstname })
+                    call.respond(studentsRepo.findAll().filter { it.elem.firstname == firstname })
                 }
                 post("byUUIDs") {
                     val uuids = try {
